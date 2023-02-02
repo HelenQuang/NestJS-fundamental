@@ -1,71 +1,54 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { Product } from './products.model';
 
 @Injectable()
 export class ProductsService {
   private productsArr: Product[] = [];
 
-  addNewProduct(title: string, description: string, price: number) {
-    const newProduct = new Product(
-      Math.random().toString(),
-      title,
-      description,
-      price,
-    );
-    this.productsArr.push(newProduct);
-    return [...this.productsArr]; //Should only return a copy
+  constructor(
+    @InjectModel('Product') private readonly productModel: Model<Product>,
+  ) {}
+
+  async addNewProduct(title: string, description: string, price: number) {
+    const newProduct = new this.productModel({ title, description, price });
+    await newProduct.save();
+    return newProduct;
   }
 
-  getAllProducts() {
-    return [...this.productsArr]; //Should only return a copy
+  async getAllProducts() {
+    const products = await this.productModel.find();
+    return products;
   }
 
-  getSingleProduct(productId: string) {
-    const product = this.findProduct(productId)[0];
-    return { ...product };
+  async getSingleProduct(productId: string) {
+    const product = await this.productModel.findById(productId);
+    if (!product) {
+      throw new NotFoundException('Could not find any product!');
+    }
+    return product;
   }
 
-  updateProduct(
+  async updateProduct(
     productId: string,
     title: string,
     description: string,
     price: number,
   ) {
-    const [product, index] = this.findProduct(productId);
-    const updatedProduct = { ...product };
-
-    if (title) {
-      updatedProduct.title = title;
-    }
-    if (description) {
-      updatedProduct.description = description;
-    }
-    if (price) {
-      updatedProduct.price = price;
-    }
-
-    this.productsArr[index] = updatedProduct;
-    return [...this.productsArr];
-  }
-
-  deleteProduct(productId: string) {
-    this.productsArr = this.productsArr.filter(
-      (product) => product.id !== productId,
-    );
-    return [...this.productsArr];
-  }
-
-  private findProduct(productId: string): [Product, number] {
-    const product = this.productsArr.find(
-      (product) => product.id === productId,
-    );
-    const productIndex = this.productsArr.findIndex(
-      (product) => product.id === productId,
-    );
+    const product = await this.productModel.findByIdAndUpdate(productId, {
+      title,
+      description,
+      price,
+    });
     if (!product) {
-      throw new NotFoundException('Could not find product');
+      throw new NotFoundException('Could not find any product!');
     }
+    return product;
+  }
 
-    return [product, productIndex];
+  async deleteProduct(productId: string) {
+    await this.productModel.findByIdAndDelete(productId);
+    return;
   }
 }
