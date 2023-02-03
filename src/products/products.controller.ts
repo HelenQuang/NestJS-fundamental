@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 
@@ -30,8 +31,11 @@ export class ProductsController {
   }
 
   @Get()
-  getAllProducts() {
-    return this.productsService.getAllProducts();
+  getAllProducts(
+    @Query('title') productTitle: string,
+    @Query('price') productPrice: number,
+  ) {
+    return this.productsService.getAllProducts(productTitle, productPrice);
   }
 
   @Get(':id')

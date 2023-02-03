@@ -5,8 +5,6 @@ import { Product } from './products.model';
 
 @Injectable()
 export class ProductsService {
-  private productsArr: Product[] = [];
-
   constructor(
     @InjectModel('Product') private readonly productModel: Model<Product>,
   ) {}
@@ -17,8 +15,14 @@ export class ProductsService {
     return newProduct;
   }
 
-  async getAllProducts() {
-    const products = await this.productModel.find();
+  async getAllProducts(title?: string, price?: number) {
+    let products: Product[];
+    if (title || price) {
+      products = await this.productModel.find({ $or: [{ title }, { price }] });
+    } else {
+      products = await this.productModel.find();
+    }
+
     return products;
   }
 
