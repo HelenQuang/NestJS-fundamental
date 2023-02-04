@@ -19,7 +19,8 @@ export class ProductsController {
   @Post()
   addNewProduct(
     //@Body() to look up in the body parse in request (req.body)
-    @Body('title') productTitle: string,
+    @Body('title')
+    productTitle: string,
     @Body('description') productDescription: string,
     @Body('price') productPrice: number,
   ) {
